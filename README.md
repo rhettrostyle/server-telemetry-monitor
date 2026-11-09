@@ -29,9 +29,103 @@ A lightweight system telemetry and diagnostics dashboard built with **FastAPI** 
 ```text
 server-telemetry-monitor/
 ├── app/
-│   ├── __init__.py
 │   └── ServerTelMonitor.py   # Core FastAPI application & telemetry routes
 ├── .gitignore
 ├── requirements.txt
 ├── LICENSE
 └── README.md
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.10 or higher
+- `pip` package manager
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/rhettrostyle/server-telemetry-monitor.git](https://github.com/rhettrostyle/server-telemetry-monitor.git)
+   cd server-telemetry-monitor
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```bash
+   # Windows
+   python -m venv .venv
+   .venv\Scripts\activate
+
+   # Linux / macOS
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## Running the Application
+
+Start the local server using Uvicorn:
+
+```bash
+uvicorn app.ServerTelMonitor:app --host 0.0.0.0 --port 8000 --reload
+```
+
+- **Web Dashboard:** Open `http://localhost:8000/monitor`
+- **JSON Telemetry Endpoint:** Open `http://localhost:8000/monitor/api/metrics`
+- **Interactive OpenAPI Docs:** Open `http://localhost:8000/docs`
+
+---
+
+## API Reference
+
+### `GET /monitor/api/metrics`
+
+Returns a real-time snapshot of system hardware resource allocation and the top active processes.
+
+#### Sample JSON Response
+
+```json
+{
+  "cpu": 12.4,
+  "ram": {
+    "percent": 48.2,
+    "used_gb": 15.42,
+    "total_gb": 32.00
+  },
+  "disk": {
+    "mount": "C:\\",
+    "percent": 64.1,
+    "free_gb": 178.50,
+    "total_gb": 498.00
+  },
+  "top_processes": [
+    {
+      "pid": 4120,
+      "name": "sqlservr.exe",
+      "mem_pct": 14.8,
+      "cpu_pct": 2.1
+    },
+    {
+      "pid": 1284,
+      "name": "python.exe",
+      "mem_pct": 2.3,
+      "cpu_pct": 1.2
+    }
+  ]
+}
+```
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
