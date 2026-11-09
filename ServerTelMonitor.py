@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-app = FastAPI(title="Server Telemetry Monitor")
+app = FastAPI(title="Site Server Telemetry Monitor")
 monitor_router = APIRouter(prefix="/monitor")
 
 
@@ -68,7 +68,8 @@ def dashboard():
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>DOSIS Systems - Site Server Telemetry</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Site Server Telemetry & System Health</title>
         <style>
             * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Arial, Helvetica, sans-serif; }
             body { background-color: #f7f9fa; color: #333; font-size: 13px; }
@@ -86,7 +87,7 @@ def dashboard():
             .header-left { display: flex; align-items: center; gap: 24px; }
             .brand-logo { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #fff; }
             .brand-logo span { color: #5bc0de; }
-            .brand-sub { font-size: 9px; color: #bce8f1; display: block; margin-top: -4px; }
+            .brand-sub { font-size: 9px; color: #bce8f1; display: block; margin-top: -4px; letter-spacing: 0.5px; }
             
             .stats-bar { display: flex; gap: 16px; font-size: 13px; font-weight: 600; }
             .stats-item span { color: #5bc0de; font-weight: 700; }
@@ -116,7 +117,7 @@ def dashboard():
                 cursor: pointer;
             }
 
-            /* Subheader Green Banner */
+            /* Subheader Banner */
             .sub-banner {
                 background: linear-gradient(to bottom, #44ba8b 0%, #35a479 100%);
                 color: white;
@@ -170,7 +171,7 @@ def dashboard():
             }
 
             /* Main Content Container */
-            .main-content { padding: 16px; }
+            .main-content { padding: 16px; max-width: 1400px; margin: 0 auto; }
 
             /* Telemetry Overview Cards */
             .vitals-grid {
@@ -184,6 +185,7 @@ def dashboard():
                 border: 1px solid #d1d5db;
                 border-radius: 4px;
                 padding: 14px;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             }
             .vital-header {
                 display: flex;
@@ -202,15 +204,16 @@ def dashboard():
             .fill-warn { background-color: #f59e0b; }
             .fill-crit { background-color: #ef4444; }
 
-            /* Data Table (Standard DOSIS Grid) */
+            /* Data Table Grid */
             .table-container {
                 background: #ffffff;
                 border: 1px solid #d1d5db;
                 border-radius: 4px;
                 overflow: hidden;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             }
-            .dosis-table { width: 100%; border-collapse: collapse; text-align: left; }
-            .dosis-table th {
+            .grid-table { width: 100%; border-collapse: collapse; text-align: left; }
+            .grid-table th {
                 background-color: #008eb7;
                 color: #ffffff;
                 padding: 8px 12px;
@@ -218,27 +221,15 @@ def dashboard():
                 font-weight: 600;
                 border-right: 1px solid #007799;
             }
-            .dosis-table th:last-child { border-right: none; }
-            .dosis-table td {
+            .grid-table th:last-child { border-right: none; }
+            .grid-table td {
                 padding: 6px 12px;
                 border-bottom: 1px solid #e5e7eb;
                 font-size: 12px;
                 color: #374151;
             }
-            .dosis-table tr:nth-child(even) { background-color: #f9fafb; }
-            .dosis-table tr:hover { background-color: #f0fdf4; }
-
-            .input-cell {
-                background: #ffffff;
-                border: 1px solid #cbd5e1;
-                border-radius: 3px;
-                padding: 3px 8px;
-                font-family: inherit;
-                font-size: 12px;
-                color: #334155;
-                width: 100%;
-                display: inline-block;
-            }
+            .grid-table tr:nth-child(even) { background-color: #f9fafb; }
+            .grid-table tr:hover { background-color: #f0fdf4; }
 
             .badge {
                 display: inline-block;
@@ -256,8 +247,8 @@ def dashboard():
         <header class="header-nav">
             <div class="header-left">
                 <div>
-                    <div class="brand-logo">D<span>O</span>SIS</div>
-                    <span class="brand-sub">by MANCHAC SYSTEMS</span>
+                    <div class="brand-logo">SYS<span>MON</span></div>
+                    <span class="brand-sub">INFRASTRUCTURE TELEMETRY</span>
                 </div>
                 <div class="stats-bar">
                     <div class="stats-item">CPU: <span id="top-cpu">--%</span></div>
@@ -265,16 +256,15 @@ def dashboard():
                     <div class="stats-item">Disk: <span id="top-disk">--%</span></div>
                 </div>
                 <nav class="nav-menu">
-                    <a class="nav-item">Automation ▾</a>
                     <a class="nav-item">Diagnostics ▾</a>
-                    <a class="nav-item">Reports ▾</a>
-                    <a class="nav-item">Settings ▾</a>
+                    <a class="nav-item">Processes ▾</a>
+                    <a class="nav-item">Metrics API ▾</a>
                     <a class="nav-item">SUPPORT ▾</a>
                 </nav>
             </div>
             <div class="header-right">
                 <div class="user-badge">
-                    <span>swsupport</span>
+                    <span>sysadmin</span>
                     <span class="user-close">✖</span>
                 </div>
             </div>
@@ -285,10 +275,163 @@ def dashboard():
             Site Server Telemetry & System Health
             <div class="search-box">
                 <label>Filter:</label>
-                <input type="text" placeholder="Search processes...">
+                <input type="text" id="proc-filter" placeholder="Search processes..." onkeyup="filterTable()">
             </div>
         </div>
 
         <!-- Sub Tabs -->
         <div class="tab-bar">
-            <button class="
+            <button class="tab-btn active">System Vitals</button>
+            <button class="tab-btn" onclick="window.open('/monitor/api/metrics', '_blank')">Raw JSON Feed</button>
+            <button class="tab-btn" onclick="window.open('/docs', '_blank')">Interactive API Docs</button>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="vitals-grid">
+                <!-- CPU Card -->
+                <div class="vital-card">
+                    <div class="vital-header">
+                        <span>Processor Load</span>
+                        <span>Multi-Core</span>
+                    </div>
+                    <div class="vital-metric" id="card-cpu">--%</div>
+                    <div class="vital-subtext">Host CPU utilization across all logical threads</div>
+                    <div class="bar-shell">
+                        <div class="bar-fill fill-normal" id="bar-cpu"></div>
+                    </div>
+                </div>
+
+                <!-- RAM Card -->
+                <div class="vital-card">
+                    <div class="vital-header">
+                        <span>Physical Memory</span>
+                        <span id="card-ram-gb">-- / -- GB</span>
+                    </div>
+                    <div class="vital-metric" id="card-ram">--%</div>
+                    <div class="vital-subtext" id="card-ram-sub">Used Virtual Memory</div>
+                    <div class="bar-shell">
+                        <div class="bar-fill fill-normal" id="bar-ram"></div>
+                    </div>
+                </div>
+
+                <!-- Disk Card -->
+                <div class="vital-card">
+                    <div class="vital-header">
+                        <span>Primary Mount</span>
+                        <span id="card-disk-mount">Mount: --</span>
+                    </div>
+                    <div class="vital-metric" id="card-disk">--%</div>
+                    <div class="vital-subtext" id="card-disk-sub">Available Storage Capacity</div>
+                    <div class="bar-shell">
+                        <div class="bar-fill fill-normal" id="bar-disk"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Processes Grid -->
+            <div class="table-container">
+                <table class="grid-table" id="procs-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">PID</th>
+                            <th>Process Image Name</th>
+                            <th style="width: 150px;">Memory Utilization</th>
+                            <th style="width: 150px;">CPU Load</th>
+                            <th style="width: 120px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proc-rows">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px;">Polling system telemetry...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <script>
+            function getStatusClass(percent) {
+                if (percent >= 85) return 'fill-crit';
+                if (percent >= 70) return 'fill-warn';
+                return 'fill-normal';
+            }
+
+            async function refreshMetrics() {
+                try {
+                    const response = await fetch('/monitor/api/metrics');
+                    if (!response.ok) return;
+                    const data = await response.json();
+
+                    // Header stats
+                    document.getElementById('top-cpu').innerText = data.cpu + '%';
+                    document.getElementById('top-ram').innerText = data.ram.percent + '%';
+                    document.getElementById('top-disk').innerText = data.disk.percent + '%';
+
+                    // CPU Card
+                    document.getElementById('card-cpu').innerText = data.cpu + '%';
+                    const cpuBar = document.getElementById('bar-cpu');
+                    cpuBar.style.width = data.cpu + '%';
+                    cpuBar.className = 'bar-fill ' + getStatusClass(data.cpu);
+
+                    // RAM Card
+                    document.getElementById('card-ram').innerText = data.ram.percent + '%';
+                    document.getElementById('card-ram-gb').innerText = data.ram.used_gb + ' / ' + data.ram.total_gb + ' GB';
+                    const ramBar = document.getElementById('bar-ram');
+                    ramBar.style.width = data.ram.percent + '%';
+                    ramBar.className = 'bar-fill ' + getStatusClass(data.ram.percent);
+
+                    // Disk Card
+                    document.getElementById('card-disk').innerText = data.disk.percent + '%';
+                    document.getElementById('card-disk-mount').innerText = 'Mount: ' + data.disk.mount;
+                    document.getElementById('card-disk-sub').innerText = data.disk.free_gb + ' GB free of ' + data.disk.total_gb + ' GB';
+                    const diskBar = document.getElementById('bar-disk');
+                    diskBar.style.width = data.disk.percent + '%';
+                    diskBar.className = 'bar-fill ' + getStatusClass(data.disk.percent);
+
+                    // Process Table
+                    const tbody = document.getElementById('proc-rows');
+                    tbody.innerHTML = '';
+                    data.top_processes.forEach(proc => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><code>${proc.pid}</code></td>
+                            <td><strong>${proc.name}</strong></td>
+                            <td>${proc.mem_pct}%</td>
+                            <td>${proc.cpu_pct}%</td>
+                            <td><span class="badge badge-active">RUNNING</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } catch (err) {
+                    console.error('Telemetry poll error:', err);
+                }
+            }
+
+            function filterTable() {
+                const input = document.getElementById('proc-filter');
+                const filter = input.value.toUpperCase();
+                const table = document.getElementById('procs-table');
+                const tr = table.getElementsByTagName('tr');
+
+                for (let i = 1; i < tr.length; i++) {
+                    const td = tr[i].getElementsByTagName('td')[1];
+                    if (td) {
+                        const text = td.textContent || td.innerText;
+                        tr[i].style.display = text.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
+                    }
+                }
+            }
+
+            refreshMetrics();
+            setInterval(refreshMetrics, 3000);
+        </script>
+    </body>
+    </html>
+    """
+
+
+app.include_router(monitor_router)
+
+if __name__ == "__main__":
+    uvicorn.run("ServerTelMonitor:app", host="0.0.0.0", port=8000, reload=True)
